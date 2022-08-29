@@ -1,0 +1,31 @@
+{{#each hits}}
+
+  <div class='photo-card'>
+    <a href='{{largeImageURL}}'>
+      <img
+        src='{{webformatURL}}'
+        {{! src='https://minfin.com.ua/img/2022/85574547/3e1881a978365fcc05e841107c68ea9d.jpeg' }}
+        alt='{{tags}}'
+        loading='lazy'
+      />
+    </a>
+    <div class='info'>
+      <p class='info-item'>
+        <b>Likes</b><br />
+        {{likes}}
+      </p>
+      <p class='info-item'>
+        <b>Views</b><br />
+        {{views}}
+      </p>
+      <p class='info-item'>
+        <b>Comments</b><br />
+        {{comments}}
+      </p>
+      <p class='info-item'>
+        <b>Downloads</b><br />
+        {{downloads}}
+      </p>
+    </div>
+  </div>
+{{/each}}
