@@ -2,10 +2,10 @@
   "name": "parcel-project-template",
   "version": "2.0.0",
   "description": "",
-  "homepage": "https://goitacademy.github.io/parcel-project-template",
+  "homepage": "https://github.com/Fluebubble/goit-js-hw-11",
   "scripts": {
     "start": "parcel src/*.html",
-    "build": "parcel build src/*.html --public-url /parcel-project-template/"
+    "build": "parcel build src/*.html --public-url /goit-js-hw-11/"
   },
   "repository": {
     "type": "git",
@@ -21,6 +21,7 @@
     "axios": "^0.27.2",
     "handlebars": "^4.7.7",
     "modern-normalize": "^1.1.0",
+    "notiflix": "^3.2.5",
     "parcel-transformer-hbs": "^1.0.3",
     "simplelightbox": "^2.10.3"
   },
