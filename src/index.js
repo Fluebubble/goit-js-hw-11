@@ -3,7 +3,7 @@ import renderedList from './templates/renderedList.hbs';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import Notiflix from 'notiflix';
-import { instanceFetch } from './fetch';
+import { instanceFetch } from './api/fetch';
 
 const refs = {
   form: document.querySelector('.search-form'),
@@ -12,36 +12,76 @@ const refs = {
   loadMoreBtn: document.querySelector('.load-more'),
 };
 
+const searchOptions = {
+  imageType: 'photo',
+  orientation: 'horizontal',
+  safeSearch: true,
+  page: 1,
+  perPage: 20,
+  incrementPageNumber() {
+    this.page += 1;
+  },
+  resetPageNumber() {
+    this.page = 1;
+  },
+};
+
 const lightbox = new SimpleLightbox('.gallery a');
 
-refs.form.addEventListener('submit', async e => {
-  e.preventDefault();
+let currentSearchRequest = '';
+
+refs.form.addEventListener('submit', e => {
+  search(e);
+});
+
+async function search(event) {
+  event.preventDefault();
+
+  if (refs.searchInput.value.trim() === '') {
+    Notiflix.Notify.warning('Введите запрос');
+    return;
+  }
+
+  if (refs.searchInput.value.trim() === currentSearchRequest) {
+    Notiflix.Notify.warning(
+      'Результаты запроса уже показаны. Введите новый запрос'
+    );
+    return;
+  }
+
+  searchOptions.resetPageNumber();
+  const fetchResult = await instanceFetch.get(
+    `?q=${refs.searchInput.value}&image_type${searchOptions.imageType}&orientation=${searchOptions.orientation}&safesearch=${searchOptions.safeSearch}&page=${searchOptions.page}`
+  );
+
   refs.loadMoreBtn.classList.add('visually-hidden');
-  instanceFetch.defaults.resetPageNumber();
-  const fetchResult = await instanceFetch.get(`?q=${refs.searchInput.value}`);
 
   if (fetchResult.data.total === 0) {
     Notiflix.Notify.warning('Nihuya ne znaydeno');
     return;
   }
-  console.log(fetchResult.data);
+
+  Notiflix.Notify.success(
+    `Найдено ${fetchResult.data.total} изображений по вашему запросу`
+  );
+
   renderPhotoList(fetchResult.data);
-  refs.loadMoreBtn.classList.remove('visually-hidden');
+  if (fetchResult.data.hits.length === 20) {
+    refs.loadMoreBtn.classList.remove('visually-hidden');
+  }
   lightbox.refresh();
 
-  console.log('Submitted');
-});
-
-refs.searchInput.addEventListener('input', () => {
-  console.log('Inputtin...');
-});
+  currentSearchRequest = refs.searchInput.value.trim();
+}
 
 refs.loadMoreBtn.addEventListener('click', async () => {
   refs.loadMoreBtn.classList.add('visually-hidden');
-  instanceFetch.defaults.incrementPageNumber();
-  const fetchResult = await instanceFetch.get(`?q=${refs.searchInput.value}`);
+  searchOptions.incrementPageNumber();
+  const fetchResult = await instanceFetch.get(
+    `?q=${refs.searchInput.value}&image_type${searchOptions.imageType}&orientation=${searchOptions.orientation}&safesearch=${searchOptions.safeSearch}&page=${searchOptions.page}`
+  );
   refs.loadMoreBtn.classList.remove('visually-hidden');
-  if (fetchResult.data.hits.length <= 20) {
+  if (fetchResult.data.hits.length < 20) {
     Notiflix.Notify.failure('Опачки, а это все изображения, больше нема:(');
     refs.loadMoreBtn.classList.add('visually-hidden');
   }
