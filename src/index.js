@@ -34,6 +34,10 @@ refs.form.addEventListener('submit', e => {
   search(e);
 });
 
+refs.loadMoreBtn.addEventListener('click', () => {
+  loadMorePhotos();
+});
+
 async function search(event) {
   event.preventDefault();
 
@@ -74,7 +78,7 @@ async function search(event) {
   currentSearchRequest = refs.searchInput.value.trim();
 }
 
-refs.loadMoreBtn.addEventListener('click', async () => {
+async function loadMorePhotos() {
   refs.loadMoreBtn.classList.add('visually-hidden');
   searchOptions.incrementPageNumber();
   const fetchResult = await instanceFetch.get(
@@ -87,11 +91,12 @@ refs.loadMoreBtn.addEventListener('click', async () => {
   }
   renderMorePhotoList(fetchResult.data);
   lightbox.refresh();
-});
+}
 
 function renderPhotoList(response) {
   refs.galleryDiv.innerHTML = renderedList(response);
 }
+
 function renderMorePhotoList(response) {
   refs.galleryDiv.insertAdjacentHTML('beforeend', renderedList(response));
 }
