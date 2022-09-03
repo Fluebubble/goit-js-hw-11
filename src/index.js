@@ -3,7 +3,7 @@ import renderedList from './templates/renderedList.hbs';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import Notiflix from 'notiflix';
-import { instanceFetch } from './api/fetch';
+import { instanceFetch, searchOptions, getImages } from './api/fetch';
 
 const refs = {
   form: document.querySelector('.search-form'),
@@ -11,24 +11,7 @@ const refs = {
   galleryDiv: document.querySelector('.gallery'),
   loadMoreBtn: document.querySelector('.load-more'),
 };
-
-const searchOptions = {
-  imageType: 'photo',
-  orientation: 'horizontal',
-  safeSearch: true,
-  page: 1,
-  perPage: 20,
-  incrementPageNumber() {
-    this.page += 1;
-  },
-  resetPageNumber() {
-    this.page = 1;
-  },
-};
-
 const lightbox = new SimpleLightbox('.gallery a');
-
-let currentSearchRequest = '';
 
 refs.form.addEventListener('submit', e => {
   search(e);
@@ -46,50 +29,47 @@ async function search(event) {
     return;
   }
 
-  if (refs.searchInput.value.trim() === currentSearchRequest) {
+  if (refs.searchInput.value.trim() === searchOptions.q) {
     Notiflix.Notify.warning(
       'Результаты запроса уже показаны. Введите новый запрос'
     );
     return;
   }
 
-  searchOptions.resetPageNumber();
-  const fetchResult = await instanceFetch.get(
-    `?q=${refs.searchInput.value}&image_type${searchOptions.imageType}&orientation=${searchOptions.orientation}&safesearch=${searchOptions.safeSearch}&page=${searchOptions.page}`
-  );
-
+  searchOptions.page = 1;
+  searchOptions.q = refs.searchInput.value;
+  const fetchResult = await getImages(searchOptions);
   refs.loadMoreBtn.classList.add('visually-hidden');
 
-  if (fetchResult.data.total === 0) {
-    Notiflix.Notify.warning('Nihuya ne znaydeno');
+  if (fetchResult.total === 0) {
+    Notiflix.Notify.warning('По вашему запросу ничего не найдено');
     return;
   }
 
   Notiflix.Notify.success(
-    `Найдено ${fetchResult.data.total} изображений по вашему запросу`
+    `Найдено ${fetchResult.total} изображений по вашему запросу`
   );
 
-  renderPhotoList(fetchResult.data);
-  if (fetchResult.data.hits.length === 20) {
+  renderPhotoList(fetchResult);
+  if (fetchResult.hits.length === 20) {
     refs.loadMoreBtn.classList.remove('visually-hidden');
   }
   lightbox.refresh();
 
-  currentSearchRequest = refs.searchInput.value.trim();
+  searchOptions.q = refs.searchInput.value.trim();
 }
 
 async function loadMorePhotos() {
   refs.loadMoreBtn.classList.add('visually-hidden');
-  searchOptions.incrementPageNumber();
-  const fetchResult = await instanceFetch.get(
-    `?q=${refs.searchInput.value}&image_type${searchOptions.imageType}&orientation=${searchOptions.orientation}&safesearch=${searchOptions.safeSearch}&page=${searchOptions.page}`
-  );
+  searchOptions.page += 1;
+  searchOptions.q = refs.searchInput.value;
+  const fetchResult = await getImages(searchOptions);
   refs.loadMoreBtn.classList.remove('visually-hidden');
-  if (fetchResult.data.hits.length < 20) {
+  if (fetchResult.hits.length < 20) {
     Notiflix.Notify.failure('Опачки, а это все изображения, больше нема:(');
     refs.loadMoreBtn.classList.add('visually-hidden');
   }
-  renderMorePhotoList(fetchResult.data);
+  renderMorePhotoList(fetchResult);
   lightbox.refresh();
 }
 
